@@ -30,8 +30,7 @@
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(3., 2.), NO, [[UIScreen mainScreen] scale]);
 
     UIBezierPath *rectanglePath = [UIBezierPath bezierPathWithRect:CGRectMake(0., 0., 3., 2.)];
-
-    [UIColor.grayColor setFill];
+    [[UIColor colorWithRed:203.0/255.0 green:208.0/255.0 blue:216.0/255.0 alpha:1.0] setFill];
     [rectanglePath fill];
 
     UIImage *thumbnail = UIGraphicsGetImageFromCurrentImageContext();
@@ -44,7 +43,7 @@
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(3., 2.), NO, [[UIScreen mainScreen] scale]);
 
     UIBezierPath *rectanglePath = [UIBezierPath bezierPathWithRect:CGRectMake(0., 0., 3., 2.)];
-    [UIColor.redColor setFill];
+    [[UIColor colorWithRed:98.0/255.0 green:168.0/255.0 blue:222.0/255.0 alpha:1.0] setFill];
     [rectanglePath fill];
 
     UIImage *thumbnail = UIGraphicsGetImageFromCurrentImageContext();
@@ -55,12 +54,42 @@
 
 - (UIImage *)handlerImage {
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(28., 28.), NO, [[UIScreen mainScreen] scale]);
-    UIColor *color = [UIColor redColor];
-
+    UIColor *color = [UIColor whiteColor];
+    
     UIBezierPath *ovalPath = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0., 0., 28., 28.)];
     [color setFill];
     [ovalPath fill];
-
+    
+    //make a new path with the old bounds and the bigger one (reversed)
+    CGMutablePathRef shadowPath = CGPathCreateMutable();
+    const CGFloat CORNER_RADIUS = 8.0;
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    
+    //add OUTER rect
+    UIBezierPath * outerPath = [UIBezierPath bezierPathWithRoundedRect:CGRectInset(CGRectMake(0., 0., 28., 28.), -CORNER_RADIUS, -CORNER_RADIUS) cornerRadius:CORNER_RADIUS];
+    CGPathAddPath(shadowPath, NULL, [outerPath CGPath]);
+    
+    CGPathAddPath(shadowPath, NULL, [ovalPath CGPath]);
+    CGPathCloseSubpath(shadowPath);
+    
+    // Add the visible paths as the clipping path to the context
+    CGContextAddPath(context, [ovalPath CGPath]);
+    
+    CGContextClip(context);
+    
+    UIColor * shadowColor = [UIColor colorWithWhite:0.2 alpha:0.5];
+    CGContextSaveGState(context);
+    CGContextSetShadowWithColor(context, CGSizeMake(2.0f, 2.0f), 6.0f, [shadowColor CGColor]);
+    
+    // Now fill the rectangle, so the shadow gets drawn
+    [shadowColor setFill];
+    CGContextSaveGState(context);
+    CGContextAddPath(context, shadowPath);
+    CGContextEOFillPath(context);
+    
+    // Release the paths
+    CGPathRelease(shadowPath);
+    
     UIImage *thumbnail = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return thumbnail;
